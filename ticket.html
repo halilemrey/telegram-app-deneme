@@ -112,17 +112,12 @@
         let connector = null;
         let connectionTimeout = null;
 
-        async function openTelegramWallet(url) {
-            // Telegram'ı açmayı dene
-            window.location.href = url;
-        }
-
         async function initTonConnect() {
             try {
                 console.log('TonConnect başlatılıyor...');
                 
                 connector = new TonConnect.TonConnect({
-                    manifestUrl: 'https://ton-connect.github.io/demo-dapp-with-react/tonconnect-manifest.json'
+                    manifestUrl: 'https://raw.githubusercontent.com/ton-connect/demo-dapp/main/public/tonconnect-manifest.json'
                 });
 
                 console.log('TonConnect başlatıldı:', connector);
@@ -155,17 +150,6 @@
                     }
                 };
 
-                const walletConnectionStatus = await connector.getWalletInfo();
-                console.log('Mevcut bağlantı durumu:', walletConnectionStatus);
-                
-                if (walletConnectionStatus) {
-                    document.getElementById('walletButton').innerHTML = `
-                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0yMiAxMS4wOFYxMmE5IDkgMCAxIDEtNS45My04LjQ4Ij48L3BhdGg+PHBvbHlsaW5lIHBvaW50cz0iMjIgNCAxMiAxNC4wMSA5IDExLjAxIj48L3BvbHlsaW5lPjwvc3ZnPg==" alt="connected">
-                        Telegram Cüzdanı Bağlı
-                    `;
-                    document.getElementById('walletButton').style.backgroundColor = '#4CAF50';
-                }
-
                 document.getElementById('walletButton').addEventListener('click', async () => {
                     try {
                         console.log('Butona tıklandı');
@@ -178,61 +162,44 @@
                         if (walletInfo) {
                             console.log('Bağlantı kesiliyor...');
                             await connector.disconnect();
-                            if (connectionTimeout) {
-                                clearTimeout(connectionTimeout);
-                                connectionTimeout = null;
-                            }
                         } else {
                             console.log('Bağlantı başlatılıyor...');
                             walletStatus.classList.add('show');
-                            
-                            const walletConnectionSource = {
-                                universalUrl: 'https://t.me/wallet',
-                                bridgeUrl: 'https://bridge.tonapi.io/bridge'
-                            };
-                            
-                            console.log('Bağlantı parametreleri:', walletConnectionSource);
 
                             try {
-                                const connectPromise = connector.connect(walletConnectionSource);
-                                const connectionUrl = await connector.connect(walletConnectionSource);
-                                console.log('Bağlantı URL:', connectionUrl);
+                                const wallets = await connector.getWallets();
+                                console.log('Kullanılabilir cüzdanlar:', wallets);
 
-                                // Telegram'ı açmayı dene
-                                await openTelegramWallet('tg://resolve?domain=wallet');
+                                // Telegram cüzdanını bul
+                                const telegramWallet = wallets.find(w => w.name.toLowerCase().includes('telegram'));
                                 
-                                // Yedek olarak tarayıcıda da aç
-                                setTimeout(() => {
-                                    window.open('https://t.me/wallet', '_blank');
-                                }, 1000);
+                                if (telegramWallet) {
+                                    console.log('Telegram cüzdanı bulundu:', telegramWallet);
+                                    
+                                    // Bağlantıyı başlat
+                                    const universalUrl = telegramWallet.universalUrl || 'tg://resolve?domain=wallet';
+                                    await connector.connect({
+                                        universalUrl: universalUrl,
+                                        bridgeUrl: 'https://bridge.tonapi.io/bridge'
+                                    });
 
-                                await connectPromise;
+                                    // Telegram'ı aç
+                                    window.location.href = universalUrl;
+                                } else {
+                                    throw new Error('Telegram cüzdanı bulunamadı');
+                                }
+
                             } catch (error) {
                                 console.error('Telegram açma hatası:', error);
                                 errorMessage.textContent = 'Telegram açılamadı. Telegram\'ın yüklü olduğundan emin olun.';
                                 errorMessage.style.display = 'block';
                             }
-
-                            // 5 saniye sonra bağlantı olmadıysa kullanıcıya bilgi ver
-                            if (connectionTimeout) {
-                                clearTimeout(connectionTimeout);
-                            }
-                            connectionTimeout = setTimeout(() => {
-                                if (!connector.getWalletInfo()) {
-                                    errorMessage.textContent = 'Telegram bulunamadı. Lütfen Telegram\'ı yükleyin ve Wallet özelliğini etkinleştirin.';
-                                    errorMessage.style.display = 'block';
-                                }
-                            }, 5000);
                         }
                     } catch (error) {
                         console.error('Cüzdan bağlantı hatası:', error);
                         const errorMessage = document.getElementById('errorMessage');
                         errorMessage.textContent = 'Bağlantı hatası: ' + error.message;
                         errorMessage.style.display = 'block';
-                        if (connectionTimeout) {
-                            clearTimeout(connectionTimeout);
-                            connectionTimeout = null;
-                        }
                     }
                 });
 
