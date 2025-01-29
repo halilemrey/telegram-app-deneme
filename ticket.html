@@ -3,25 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net; connect-src 'self' https://bridge.tonapi.io https://app.tonkeeper.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: *;">
-    <title>Sayfa 1</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://bridge.tonapi.io https://app.tonkeeper.com https://raw.githubusercontent.com; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.rawgit.com https://unpkg.com; connect-src 'self' https://bridge.tonapi.io https://app.tonkeeper.com https://raw.githubusercontent.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: *;">
+    <title>TON Wallet Connect</title>
     <style>
         body, html {
             height: 100%;
             margin: 0;
             padding: 0;
             font-family: Arial, sans-serif;
-            background-image: url("dosylar/ticket.png"); /* Arka plan gif URL'si */
-            background-size: cover; /* Arka planın tam ekran olması için */
-            background-position: center; /* Arka planı ortalar */
-            background-repeat: no-repeat; /* Gif'in tekrar etmemesini sağla */
-            color: white; /* Metin rengini beyaz yapıyoruz, çünkü koyu arka plan var */
+            background-image: url("./dosylar/ticket.png");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            color: white;
             text-align: center;
             display: flex;
             justify-content: center;
             align-items: center;
             flex-direction: column;
-            min-height: 100vh; /* Sayfanın en az ekran boyutunda olmasını sağlar */
+            min-height: 100vh;
         }
 
         .wallet-connect {
@@ -50,11 +50,6 @@
             background-color: #006699;
         }
 
-        .wallet-button img {
-            width: 24px;
-            height: 24px;
-        }
-
         .wallet-status {
             display: none;
             text-align: center;
@@ -68,26 +63,8 @@
             display: block;
         }
 
-        .error-message {
-            color: #d32f2f;
-            margin-top: 10px;
-            text-align: center;
-        }
-
-        .wallet-link {
-            display: inline-block;
-            margin-top: 10px;
-            color: #0088CC;
-            text-decoration: none;
-            padding: 8px 16px;
-            border: 1px solid #0088CC;
-            border-radius: 4px;
-            transition: all 0.3s;
-        }
-        
-        .wallet-link:hover {
-            background: #0088CC;
-            color: white;
+        #status {
+            margin-top: 20px;
         }
     </style>
 </head>
@@ -95,125 +72,97 @@
     <div class="wallet-connect">
         <button id="walletButton" class="wallet-button">
             <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxyZWN0IHg9IjIiIHk9IjQiIHdpZHRoPSIyMCIgaGVpZ2h0PSIxNiIgcng9IjIiPjwvcmVjdD48cGF0aCBkPSJNMiAxMGg0bDIgMmgyTDEyIDEwaDEwIj48L3BhdGg+PC9zdmc+" alt="wallet">
-            Telegram Cüzdanını Bağla
+            Connect Telegram Wallet
         </button>
-        <div id="walletStatus" class="wallet-status">
-            <p>Telegram cüzdanı bağlantısı bekleniyor...</p>
-            <p style="margin-top: 10px;">Telegram yüklü değilse:</p>
-            <a href="https://telegram.org" target="_blank" class="wallet-link">Telegram'ı İndirin</a>
-            <div id="errorMessage" class="error-message"></div>
-        </div>
+        <button id="purchaseButton" class="wallet-button" style="display: none;">
+            Buy Ticket (10 TON)
+        </button>
+        <div id="status"></div>
     </div>
 
-    <!-- TON Connect SDK -->
-    <script src="tonconnect-sdk.js"></script>
-    
+    <script src="https://unpkg.com/@tonconnect/sdk@latest"></script>
     <script>
-        let connector = null;
-        let connectionTimeout = null;
+        let tonConnect;
+        let walletAddress;
 
         async function initTonConnect() {
             try {
-                console.log('TonConnect başlatılıyor...');
-                
-                connector = new TonConnect.TonConnect({
-                    manifestUrl: 'https://raw.githubusercontent.com/ton-connect/demo-dapp/main/public/tonconnect-manifest.json'
+                tonConnect = new TonConnect({
+                    manifestUrl: 'https://raw.githubusercontent.com/ton-community/tutorials/main/03-wallet/tonconnect-manifest.json'
                 });
 
-                console.log('TonConnect başlatıldı:', connector);
-
-                connector.onStatusChange = (wallet) => {
-                    console.log('Wallet durumu değişti:', wallet);
-                    const walletButton = document.getElementById('walletButton');
-                    const walletStatus = document.getElementById('walletStatus');
-                    
-                    if (wallet) {
-                        console.log('Cüzdan bağlandı:', wallet);
-                        walletButton.innerHTML = `
-                            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0yMiAxMS4wOFYxMmE5IDkgMCAxIDEtNS45My04LjQ4Ij48L3BhdGg+PHBvbHlsaW5lIHBvaW50cz0iMjIgNCAxMiAxNC4wMSA5IDExLjAxIj48L3BvbHlsaW5lPjwvc3ZnPg==" alt="connected">
-                            Telegram Cüzdanı Bağlı
-                        `;
-                        walletButton.style.backgroundColor = '#4CAF50';
-                        walletStatus.classList.remove('show');
-                        if (connectionTimeout) {
-                            clearTimeout(connectionTimeout);
-                            connectionTimeout = null;
-                        }
-                    } else {
-                        console.log('Cüzdan bağlantısı kesildi');
-                        walletButton.innerHTML = `
-                            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxyZWN0IHg9IjIiIHk9IjQiIHdpZHRoPSIyMCIgaGVpZ2h0PSIxNiIgcng9IjIiPjwvcmVjdD48cGF0aCBkPSJNMiAxMGg0bDIgMmgyTDEyIDEwaDEwIj48L3BhdGg+PC9zdmc+" alt="wallet">
-                            Telegram Cüzdanını Bağla
-                        `;
-                        walletButton.style.backgroundColor = '#0088CC';
-                        walletStatus.classList.remove('show');
-                    }
-                };
+                const wallet = await tonConnect.restoreConnection();
+                handleWalletConnection(wallet);
 
                 document.getElementById('walletButton').addEventListener('click', async () => {
                     try {
-                        console.log('Butona tıklandı');
-                        const walletInfo = await connector.getWalletInfo();
-                        console.log('Wallet bilgisi:', walletInfo);
-                        const walletStatus = document.getElementById('walletStatus');
-                        const errorMessage = document.getElementById('errorMessage');
-                        errorMessage.style.display = 'none';
-
-                        if (walletInfo) {
-                            console.log('Bağlantı kesiliyor...');
-                            await connector.disconnect();
+                        const wallets = await tonConnect.getWallets();
+                        if (wallets.length > 0) {
+                            await tonConnect.connect({ universalLink: wallets[0].universalLink });
                         } else {
-                            console.log('Bağlantı başlatılıyor...');
-                            walletStatus.classList.add('show');
-
-                            try {
-                                const wallets = await connector.getWallets();
-                                console.log('Kullanılabilir cüzdanlar:', wallets);
-
-                                // Telegram cüzdanını bul
-                                const telegramWallet = wallets.find(w => w.name.toLowerCase().includes('telegram'));
-                                
-                                if (telegramWallet) {
-                                    console.log('Telegram cüzdanı bulundu:', telegramWallet);
-                                    
-                                    // Bağlantıyı başlat
-                                    const universalUrl = telegramWallet.universalUrl || 'tg://resolve?domain=wallet';
-                                    await connector.connect({
-                                        universalUrl: universalUrl,
-                                        bridgeUrl: 'https://bridge.tonapi.io/bridge'
-                                    });
-
-                                    // Telegram'ı aç
-                                    window.location.href = universalUrl;
-                                } else {
-                                    throw new Error('Telegram cüzdanı bulunamadı');
-                                }
-
-                            } catch (error) {
-                                console.error('Telegram açma hatası:', error);
-                                errorMessage.textContent = 'Telegram açılamadı. Telegram\'ın yüklü olduğundan emin olun.';
-                                errorMessage.style.display = 'block';
-                            }
+                            document.getElementById('status').textContent = "Cüzdan bulunamadı.";
                         }
                     } catch (error) {
-                        console.error('Cüzdan bağlantı hatası:', error);
-                        const errorMessage = document.getElementById('errorMessage');
-                        errorMessage.textContent = 'Bağlantı hatası: ' + error.message;
-                        errorMessage.style.display = 'block';
+                        document.getElementById('status').textContent = "Bağlantı hatası: " + error.message;
                     }
                 });
 
+                document.getElementById('purchaseButton').addEventListener('click', async () => {
+                    if (!walletAddress) {
+                        alert('Önce cüzdanınızı bağlayın!');
+                        return;
+                    }
+
+                    try {
+                        const transaction = {
+                            validUntil: Math.floor(Date.now() / 1000) + 600,
+                            messages: [{
+                                address: 'EQA4V9tF4lY2S_J8U0wQe3DXv5wkTN_YGh7BHROK6JGwAAAB',
+                                amount: '10000000000',
+                                payload: 'te6ccgEBAQEABgAACCBiaWxldA=='
+                            }]
+                        };
+
+                        await tonConnect.sendTransaction(transaction);
+                        document.getElementById('status').textContent = "Bilet satın alındı!";
+                    } catch (error) {
+                        document.getElementById('status').textContent = "İşlem hatası: " + error.message;
+                    }
+                });
+
+                tonConnect.onStatusChange(handleWalletConnection);
             } catch (error) {
-                console.error('TON Connect başlatma hatası:', error);
-                document.getElementById('errorMessage').textContent = 'Cüzdan bağlantısında hata: ' + error.message;
+                console.error("TonConnect Başlatma Hatası:", error);
+                document.getElementById('status').textContent = "TonConnect başlatılamadı.";
             }
         }
 
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initTonConnect);
-        } else {
-            initTonConnect();
+        function handleWalletConnection(wallet) {
+            const statusDiv = document.getElementById('status');
+            const purchaseButton = document.getElementById('purchaseButton');
+            const walletButton = document.getElementById('walletButton');
+
+            if (wallet) {
+                walletAddress = wallet.account.address;
+                statusDiv.textContent = "Bağlandı: " + walletAddress;
+                walletButton.textContent = 'Wallet Connected';
+                purchaseButton.style.display = 'block';
+            } else {
+                statusDiv.textContent = "Cüzdan Bağlı Değil";
+                walletButton.textContent = 'Connect Telegram Wallet';
+                purchaseButton.style.display = 'none';
+            }
         }
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            if (typeof TonConnect === 'undefined') {
+                console.error("TonConnect yüklenemedi.");
+                document.getElementById('status').textContent = "SDK yüklenemedi.";
+                return;
+            }
+
+            await initTonConnect();
+        });
     </script>
 </body>
 </html>
