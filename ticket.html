@@ -112,6 +112,11 @@
         let connector = null;
         let connectionTimeout = null;
 
+        async function openTelegramWallet(url) {
+            // Telegram'ı açmayı dene
+            window.location.href = url;
+        }
+
         async function initTonConnect() {
             try {
                 console.log('TonConnect başlatılıyor...');
@@ -182,11 +187,31 @@
                             walletStatus.classList.add('show');
                             
                             const walletConnectionSource = {
-                                universalUrl: 'tg://resolve?domain=wallet',
+                                universalUrl: 'https://t.me/wallet',
                                 bridgeUrl: 'https://bridge.tonapi.io/bridge'
                             };
                             
                             console.log('Bağlantı parametreleri:', walletConnectionSource);
+
+                            try {
+                                const connectPromise = connector.connect(walletConnectionSource);
+                                const connectionUrl = await connector.connect(walletConnectionSource);
+                                console.log('Bağlantı URL:', connectionUrl);
+
+                                // Telegram'ı açmayı dene
+                                await openTelegramWallet('tg://resolve?domain=wallet');
+                                
+                                // Yedek olarak tarayıcıda da aç
+                                setTimeout(() => {
+                                    window.open('https://t.me/wallet', '_blank');
+                                }, 1000);
+
+                                await connectPromise;
+                            } catch (error) {
+                                console.error('Telegram açma hatası:', error);
+                                errorMessage.textContent = 'Telegram açılamadı. Telegram\'ın yüklü olduğundan emin olun.';
+                                errorMessage.style.display = 'block';
+                            }
 
                             // 5 saniye sonra bağlantı olmadıysa kullanıcıya bilgi ver
                             if (connectionTimeout) {
@@ -198,8 +223,6 @@
                                     errorMessage.style.display = 'block';
                                 }
                             }, 5000);
-
-                            await connector.connect(walletConnectionSource);
                         }
                     } catch (error) {
                         console.error('Cüzdan bağlantı hatası:', error);
