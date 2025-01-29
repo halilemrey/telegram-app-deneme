@@ -1,0 +1,9 @@
+{
+  "name": "telegram-wallet-integration",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "@tonconnect/sdk": "^2.1.3"
+  }
+}

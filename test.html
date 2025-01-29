@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ana Sayfa</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            overflow: hidden;
+            transition: background-color 0.3s ease;
+        }
+
+        .splash-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #f0f0f0;
+            background-image: url('dosylar/sticma.gif');
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .content {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            width: 100%;
+            background-image: url('dosylar/main.gif');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .logo {
+            position: absolute;
+            top: 50px;
+            left: 20px;
+            width: 50px;
+            height: 50px;
+            background-image: url('dosylar/Connect\ \(1\).png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            animation: logoMove 1s ease-in-out infinite alternate;
+        }
+
+        @keyframes logoMove {
+            0% {
+                transform: translateY(0);
+            }
+            100% {
+                transform: translateY(10px);
+            }
+        }
+
+        .centered-button-container {
+            position: absolute;
+            top: 72%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .centered-button-container a {
+            display: block;
+            width: 250px;
+            height: 60px;
+            background-size: cover;
+            background-position: center;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .centered-button-container a:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .centered-button-container a:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .button-container {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 2px;
+            padding: 10px;
+            justify-content: center;
+            width: 100%;
+            box-sizing: border-box;
+            background-color: rgba(0, 0, 0, 0.6);
+            flex-wrap: wrap;
+        }
+
+        .button-container a {
+            text-decoration: none;
+            flex: 1 1 22%;
+            max-width: 22%;
+        }
+
+        .button-container button {
+            background: rgba(0, 121, 161, 0.8);
+            border: none;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-size: 0.8rem;
+            cursor: pointer;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            width: 100%;
+            height: 45px;
+            box-sizing: border-box;
+            margin: 1px;
+        }
+
+        .button-container button:hover {
+            background-color: rgba(0, 121, 161, 1);
+            transform: translateY(-5px);
+        }
+
+        .button-container button:active {
+            transform: translateY(8px);
+            transition: all 0.1s ease;
+        }
+
+        .popup {
+            display: none;
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 400px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            z-index: 100;
+        }
+
+        
+
+        .popup-close {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        /* Aktif Buton */
+        .button-container a.active button {
+            background: linear-gradient(145deg, rgba(0, 121, 161, 1), rgba(0, 171, 205, 1)); /* Su temalı renk geçişi */
+            color: #ffffff; /* Metin rengi beyaz */
+            box-shadow: 0 8px 20px rgba(0, 171, 205, 0.6), 0 6px 12px rgba(0, 121, 161, 0.4); /* Hafif ışık ve su sıçraması etkisi */
+            transform: scale(1.05); /* Buton büyür */
+            animation: waveEffectActive 1s ease-in-out infinite alternate; /* Aktif buton dalga animasyonu */
+        }
+
+        /* Aktif buton dalga animasyonu */
+        @keyframes waveEffectActive {
+            0% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+        }
+
+        /* Aktif butonun metni üzerine gelindiğinde ışık efekti */
+        .button-container a.active button:hover {
+            color: #f0f8ff; /* Beyazmsı mavi metin rengi */
+            text-shadow: 0 0 10px rgba(0, 171, 205, 1), 0 0 15px rgba(0, 171, 205, 0.7); /* Işık efekti */
+            background: rgba(0, 121, 161, 1); /* Buton üzerine gelindiğinde su rengi */
+        }
+
+        /* Aktif butonun etrafındaki su sıçraması efekti */
+        .button-container a.active button::before {
+            content: '';
+            position: absolute;
+            top: -150%;
+            left: -150%;
+            width: 300%;
+            height: 300%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: all 0.6s ease;
+            border-radius: 50%;
+            pointer-events: none;
+            transform: scale(0);
+        }
+
+        /* Aktif durumda su sıçraması efekti */
+        .button-container a.active button:hover::before {
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform: scale(1);
+        }
+
+        
+    </style>
+</head>
+<body>
+    <div class="splash-screen"></div>
+
+    <div class="content">
+        <div class="logo"></div>
+
+        <div class="centered-button-container">
+            <a href="" style="background-image: url('dosylar/tgc.png');" onclick="addClickEffect(this)"></a>
+            <a href="" style="background-image: url('dosylar/tg.png');" onclick="addClickEffect(this)"></a>
+            <a href="" style="background-image: url('dosylar/tw.png');" onclick="addClickEffect(this)"></a>
+        </div>
+
+        <div class="button-container">
+            <a href="test.html">
+                <button id="button1" onclick="addClickEffect(this)">HOME</button>
+            </a>
+            <a href="ticket.html">
+                <button id="button2" onclick="addClickEffect(this)">TICKET</button>
+            </a>    
+            <a href="leader.html">
+                <button id="button3" onclick="addClickEffect(this)">LEADER</button>
+            </a>
+            <a href="miss.html">
+                <button id="button4" onclick="addClickEffect(this)">MISSIONS</button>
+            </a>
+        </div>
+    </div>
+
+    <!-- Popup Metin Alanı -->
+    <div class="popup" id="popup">
+        <div class="popup-close" onclick="closePopup()">×</div>
+        Metin girilecek
+    </div>
+
+    <script>
+        function addClickEffect(button) {
+            button.classList.add('clicked');
+            setTimeout(function() {
+                button.classList.remove('clicked');
+            }, 300);
+        }
+
+        function preloadImage(url, callback) {
+            var img = new Image();
+            img.src = url;
+            img.onload = callback;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var splashScreen = document.querySelector('.splash-screen');
+            var content = document.querySelector('.content');
+
+            if (!localStorage.getItem('visited')) {
+                localStorage.setItem('visited', 'true');
+                preloadImage('dosylar/sticma.gif', function() {
+                    setTimeout(function() {
+                        splashScreen.style.display = 'none';
+                        content.style.display = 'flex';
+                    }, 3800);
+                });
+            } else {
+                splashScreen.style.display = 'none';
+                content.style.display = 'flex';
+            }
+
+            var links = document.querySelectorAll('.button-container a');
+            links.forEach(function(link) {
+                if (link.href === window.location.href) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // Popup açma ve kapama işlevi
+        function openPopup() {
+            document.getElementById('popup').style.display = 'block';
+        }
+
+        function closePopup() {
+            document.getElementById('popup').style.display = 'none';
+        }
+
+        // Logo tıklanabilir olması için, popup'ı açacak bir işlev ekleyelim
+        document.querySelector('.logo').addEventListener('click', openPopup);
+    </script>
+</body>
+</html>
